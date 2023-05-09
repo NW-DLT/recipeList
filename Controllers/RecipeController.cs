@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using recipeList.Data;
 using recipeList.Models;
@@ -40,6 +41,7 @@ namespace recipeList.Controllers
             }
         }
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> newRecipe(Recipe recipe)
         {
             try
@@ -54,6 +56,7 @@ namespace recipeList.Controllers
             }
         }
         [HttpPut]
+        [Authorize]
         public async Task<IActionResult> editRecipe(Recipe recipe)
         {
             try
@@ -68,6 +71,7 @@ namespace recipeList.Controllers
             }
         }
         [HttpDelete("deleteRecipe/{id}")]
+        [Authorize]
         public async Task<IActionResult> deleteRecipe(int id)
         {
             try

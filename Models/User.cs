@@ -1,11 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace recipeList.Models
 {
-    public class User
+    public class User : IdentityUser
     {
-        [Key]
-        public string id {get; set;}
-        public List<Recipe> recipes { get; set; }
     }
 }
