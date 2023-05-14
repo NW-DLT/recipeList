@@ -1,8 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using recipeList.Data;
 using recipeList.Models;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace recipeList.Controllers
 {
@@ -12,17 +16,20 @@ namespace recipeList.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        public UserController(UserManager<User> userManager, SignInManager<User> signInManager)
+        private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly AppDBContext _dbContext;
+        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, AppDBContext appDBContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _dbContext = appDBContext;
         }
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterModel registerModel)
         {
             var user = new User { UserName = registerModel.Email, Email = registerModel.Email };
-            var result = await _userManager.CreateAsync(user, registerModel.Email);
+            var result = await _userManager.CreateAsync(user, registerModel.Password);
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, isPersistent: false);
@@ -34,6 +41,7 @@ namespace recipeList.Controllers
             }
         }
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(LoginModel loginModel)
         {
             var result = await _signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, isPersistent: false, lockoutOnFailure: false);
@@ -44,6 +52,25 @@ namespace recipeList.Controllers
             else
             {
                 return BadRequest("Invalid login attempt.");
+            }
+        }
+        [HttpPost("subscribe")]
+        [Authorize]
+        public async Task<IActionResult> subscribe(User user)
+        {
+            try
+            {
+                var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var currentUser = await _userManager.FindByIdAsync(currentUserId);
+                Subscribe subscribe = new Subscribe();
+                subscribe.Subscriber = currentUser;
+                user.subscribers.Add(subscribe);
+                await _dbContext.SaveChangesAsync();
+                return Ok();
+            }
+            catch
+            {
+                return BadRequest();
             }
         }
 
