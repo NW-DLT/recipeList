@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:
+  recipelist:
+    image: ${DOCKER_REGISTRY-}recipelist
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - recipelist_network
+    links:
+      - sql_server
+  sql_server:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    hostname: 'sqlserver'
+    container_name: sql_server_container
+  client:
+    image: client
+    build:
+      context: C:\Users\alexp\source\repos\CookAndShare
+      dockerfile: Dockerfile
+  proxy:
+    image: nginx:mainline
+     
+networks:
+  recipelist_network:

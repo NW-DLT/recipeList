@@ -20,3 +20,10 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "recipeList.dll"]
+
+# Add the migration steps here
+WORKDIR /app
+COPY ["recipeList.csproj", "."]
+RUN dotnet ef migrations add InitialMigration --output-dir Migrations
+RUN dotnet ef migrations script --output init-script.sql --idempotent
+RUN dotnet ef database update

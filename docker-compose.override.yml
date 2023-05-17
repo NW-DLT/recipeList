@@ -1,0 +1,24 @@
+version: '3.4'
+
+services:
+  recipelist:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:80"
+  sql_server:
+     ports:
+       - 1433:1433
+     environment:
+       - ACCEPT_EULA=Y
+       - SA_PASSWORD=Fw9N7s2aH
+     volumes:
+       - ${PWD}/Migrations:/docker-entrypoint-initdb.d
+  client:
+    ports:
+      - "5001:3000" 
+  proxy:
+    ports:
+      - "8080:80"
+    volumes:
+      - C:/Users/alexp/source/repos/recipeList/nginx.conf:/etc/nginx/nginx.conf

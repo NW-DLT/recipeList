@@ -11,7 +11,7 @@ using System.Security.Claims;
 namespace recipeList.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
@@ -28,7 +28,7 @@ namespace recipeList.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterModel registerModel)
         {
-            var user = new User { UserName = registerModel.Email, Email = registerModel.Email };
+            var user = new User { UserName = registerModel.Email, Email = registerModel.Email, Name = registerModel.Name};
             var result = await _userManager.CreateAsync(user, registerModel.Password);
             if (result.Succeeded)
             {
@@ -77,6 +77,8 @@ namespace recipeList.Controllers
     }
     public class RegisterModel
     {
+        [Required]
+        public string Name { get; set; }
         [Required]
         [EmailAddress]
         public string Email { get; set; }
