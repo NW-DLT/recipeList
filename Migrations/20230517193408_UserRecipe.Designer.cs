@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using recipeList.Data;
 
@@ -11,9 +12,11 @@ using recipeList.Data;
 namespace recipeList.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    partial class AppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20230517193408_UserRecipe")]
+    partial class UserRecipe
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -442,9 +445,11 @@ namespace recipeList.Migrations
 
             modelBuilder.Entity("recipeList.Models.Recipe", b =>
                 {
-                    b.HasOne("recipeList.Models.User", null)
-                        .WithMany("Recipes")
+                    b.HasOne("recipeList.Models.User", "User")
+                        .WithMany()
                         .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("recipeList.Models.Subscribe", b =>
@@ -474,8 +479,6 @@ namespace recipeList.Migrations
 
             modelBuilder.Entity("recipeList.Models.User", b =>
                 {
-                    b.Navigation("Recipes");
-
                     b.Navigation("subscribers");
                 });
 #pragma warning restore 612, 618

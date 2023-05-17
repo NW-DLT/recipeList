@@ -7,6 +7,7 @@ using recipeList.Data;
 using recipeList.Models;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
 
 namespace recipeList.Controllers
 {
@@ -50,11 +51,25 @@ namespace recipeList.Controllers
         }
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> newRecipe(Recipe recipe)
+        public async Task<IActionResult> newRecipe(newRecipeModel model,[FromForm] IFormFile formFile)
         {
             try
             {
+                var userId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var user = await _userManager.FindByIdAsync(userId);
+                Recipe recipe = new Recipe()
+                {
+                    name = model.Name,
+                    description = model.Discription,
+                    images = new List<Image>()
+                };
+
+                Image _image = new Image() { FormFile = formFile };
+                _image.Src = _image.getSrc(_image);
+                recipe.images.Add(_image);
+
                 _dbContext.recipes.Add(recipe);
+                user.Recipes.Add(recipe);
                 await _dbContext.SaveChangesAsync();
                 return new OkResult();
             }
@@ -113,6 +128,14 @@ namespace recipeList.Controllers
             {
                 return new BadRequestResult();
             }
+        }
+
+        public class newRecipeModel
+        {
+            [Required]
+            public string Name { get; set; }
+            [Required]
+            public string Discription { get; set; }
         }
     }
 }

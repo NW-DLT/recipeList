@@ -11,24 +11,25 @@ using System.Security.Claims;
 namespace recipeList.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly AppDBContext _dbContext;
-        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, AppDBContext appDBContext)
+        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, AppDBContext appDBContext, IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _dbContext = appDBContext;
+            this.httpContextAccessor = httpContextAccessor;
         }
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterModel registerModel)
         {
-            var user = new User { UserName = registerModel.Email, Email = registerModel.Email };
+            var user = new User { UserName = registerModel.Email, Email = registerModel.Email , Name = registerModel.Name   };
             var result = await _userManager.CreateAsync(user, registerModel.Password);
             if (result.Succeeded)
             {
@@ -40,6 +41,27 @@ namespace recipeList.Controllers
                 return BadRequest(result.Errors);
             }
         }
+        [HttpPost("avatar")]
+        [Authorize]
+        public async Task<IActionResult> Avatar(IFormFile avatar)
+        {
+            try
+            {
+                var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var currentUser = await _userManager.FindByIdAsync(currentUserId);
+                Image image = new Image() { FormFile = avatar };
+                image.Src = image.getSrc(image);
+                currentUser.Image = image;
+                await _dbContext.SaveChangesAsync();
+                return Ok();
+            }
+            catch
+            {
+                return BadRequest();
+            }
+
+        }
+
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login(LoginModel loginModel)
@@ -77,6 +99,8 @@ namespace recipeList.Controllers
     }
     public class RegisterModel
     {
+        [Required]
+        public string Name { get; set; }
         [Required]
         [EmailAddress]
         public string Email { get; set; }

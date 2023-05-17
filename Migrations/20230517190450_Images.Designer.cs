@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using recipeList.Data;
 
@@ -11,9 +12,11 @@ using recipeList.Data;
 namespace recipeList.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    partial class AppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20230517190450_Images")]
+    partial class Images
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -240,9 +243,6 @@ namespace recipeList.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -252,8 +252,6 @@ namespace recipeList.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("recipes");
                 });
@@ -440,13 +438,6 @@ namespace recipeList.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("recipeList.Models.Recipe", b =>
-                {
-                    b.HasOne("recipeList.Models.User", null)
-                        .WithMany("Recipes")
-                        .HasForeignKey("UserId");
-                });
-
             modelBuilder.Entity("recipeList.Models.Subscribe", b =>
                 {
                     b.HasOne("recipeList.Models.User", "Subscriber")
@@ -474,8 +465,6 @@ namespace recipeList.Migrations
 
             modelBuilder.Entity("recipeList.Models.User", b =>
                 {
-                    b.Navigation("Recipes");
-
                     b.Navigation("subscribers");
                 });
 #pragma warning restore 612, 618
