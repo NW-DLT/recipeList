@@ -51,7 +51,7 @@ namespace recipeList.Controllers
         }
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> newRecipe(newRecipeModel model,[FromForm] IFormFile formFile)
+        public async Task<IActionResult> newRecipe(newRecipeModel model)
         {
             try
             {
@@ -60,13 +60,8 @@ namespace recipeList.Controllers
                 Recipe recipe = new Recipe()
                 {
                     name = model.Name,
-                    description = model.Discription,
-                    images = new List<Image>()
+                    description = model.Discription
                 };
-
-                Image _image = new Image() { FormFile = formFile };
-                _image.Src = _image.getSrc(_image);
-                recipe.images.Add(_image);
 
                 _dbContext.recipes.Add(recipe);
                 user.Recipes.Add(recipe);

@@ -41,6 +41,41 @@ namespace recipeList.Controllers
                 return BadRequest(result.Errors);
             }
         }
+        [HttpGet("profile")]
+        [Authorize]
+        public async Task<ActionResult<User>> profile()
+        {
+            try
+            {
+                var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var currentUser = await _dbContext.Users.Include(g => g.Image)
+                                                        .Include(g => g.Recipes)
+                                                        .FirstOrDefaultAsync(o => o.Id == currentUserId);
+
+                return currentUser;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpGet("profile/{id}")]
+        [Authorize]
+        public async Task<ActionResult<User>> profile(string id)
+        {
+            try
+            {
+                var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var currentUser = await _dbContext.Users.Include(g => g.Image)
+                                                        .Include(g => g.Recipes)
+                                                        .FirstOrDefaultAsync(o => o.Id == id);
+                return currentUser;
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
         [HttpPost("avatar")]
         [Authorize]
         public async Task<IActionResult> Avatar(IFormFile avatar)

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using recipeList.Data;
 
@@ -11,9 +12,11 @@ using recipeList.Data;
 namespace recipeList.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    partial class AppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20230519170452_noRecipeImages")]
+    partial class noRecipeImages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -167,7 +170,7 @@ namespace recipeList.Migrations
 
                     b.HasIndex("productsid");
 
-                    b.ToTable("ProductRecipe", (string)null);
+                    b.ToTable("ProductRecipe");
                 });
 
             modelBuilder.Entity("recipeList.Models.Image", b =>
@@ -184,7 +187,7 @@ namespace recipeList.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Image", (string)null);
+                    b.ToTable("Image");
                 });
 
             modelBuilder.Entity("recipeList.Models.Like", b =>
@@ -207,7 +210,7 @@ namespace recipeList.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("likes", (string)null);
+                    b.ToTable("likes");
                 });
 
             modelBuilder.Entity("recipeList.Models.Product", b =>
@@ -224,7 +227,7 @@ namespace recipeList.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("products", (string)null);
+                    b.ToTable("products");
                 });
 
             modelBuilder.Entity("recipeList.Models.Recipe", b =>
@@ -250,7 +253,7 @@ namespace recipeList.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("recipes", (string)null);
+                    b.ToTable("recipes");
                 });
 
             modelBuilder.Entity("recipeList.Models.Subscribe", b =>
@@ -268,7 +271,7 @@ namespace recipeList.Migrations
 
                     b.HasIndex("SubscriberId");
 
-                    b.ToTable("subscribers", (string)null);
+                    b.ToTable("subscribers");
                 });
 
             modelBuilder.Entity("recipeList.Models.User", b =>
