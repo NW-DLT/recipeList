@@ -3,10 +3,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using recipeList.Data;
 using recipeList.Models;
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace recipeList.Controllers
 {
@@ -18,12 +22,14 @@ namespace recipeList.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly AppDBContext _dbContext;
-        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, AppDBContext appDBContext, IHttpContextAccessor httpContextAccessor)
+        private readonly IConfiguration _configuration;
+        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, AppDBContext appDBContext, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _dbContext = appDBContext;
             this.httpContextAccessor = httpContextAccessor;
+            _configuration = configuration;
         }
         [HttpPost("register")]
         [AllowAnonymous]
@@ -104,7 +110,34 @@ namespace recipeList.Controllers
             var result = await _signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
             {
-                return Ok();
+                var user = await _userManager.FindByEmailAsync(loginModel.Email);
+
+                var claims = new List<Claim>
+                {
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Name, user.UserName)
+                };
+
+                var key = new byte[16];
+                using (var rng = RandomNumberGenerator.Create())
+                {
+                    rng.GetBytes(key);
+                }
+                var jwtKey = new SymmetricSecurityKey(key);
+                var creds = new SigningCredentials(jwtKey, SecurityAlgorithms.HmacSha256);
+
+
+                var token = new JwtSecurityToken(
+                    issuer: "myapp",
+                    audience: "myapp",
+                    claims: claims,
+                    expires: DateTime.UtcNow.AddMinutes(30),
+                    signingCredentials: creds);
+
+                return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
             }
             else
             {
