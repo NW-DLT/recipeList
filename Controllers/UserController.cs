@@ -108,7 +108,7 @@ namespace recipeList.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
+        public async Task<IActionResult> login([FromBody] LoginModel loginModel)
         {
             var result = await _signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
