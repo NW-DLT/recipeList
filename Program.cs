@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using recipeList.Data;
 using recipeList.Models;
+using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +27,28 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
                 .AddEntityFrameworkStores<AppDBContext>()
                 .AddDefaultTokenProviders();
 
+//AuthToken
+var key = new byte[16];
+using (var rng = RandomNumberGenerator.Create())
+{
+    rng.GetBytes(key);
+}
+var jwtKey = new SymmetricSecurityKey(key);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "myapp",
+            ValidAudience = "myapp",
+            IssuerSigningKey = jwtKey
+        };
+    });
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -31,6 +56,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseAuthentication();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
