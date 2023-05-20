@@ -50,7 +50,7 @@ namespace recipeList.Controllers
             }
         }
         [HttpPost]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         public async Task<IActionResult> newRecipe(newRecipeModel model)
         {
             try

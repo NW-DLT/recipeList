@@ -117,7 +117,7 @@ namespace recipeList.Controllers
 
                 var token = _jwtManager.GenerateToken(user.Id);
 
-                return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+                return Ok(token);
             }
             else
             {
