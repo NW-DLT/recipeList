@@ -23,13 +23,16 @@ namespace recipeList.Controllers
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly AppDBContext _dbContext;
         private readonly IConfiguration _configuration;
-        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, AppDBContext appDBContext, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+        private readonly JwtManager _jwtManager;
+        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, 
+            AppDBContext appDBContext, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, JwtManager jwtManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _dbContext = appDBContext;
             this.httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
+            _jwtManager = jwtManager;
         }
         [HttpPost("register")]
         [AllowAnonymous]
@@ -105,37 +108,14 @@ namespace recipeList.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginModel loginModel)
+        public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
             var result = await _signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(loginModel.Email);
 
-                var claims = new List<Claim>
-                {
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id),
-                    new Claim(ClaimTypes.Name, user.UserName)
-                };
-
-                var key = new byte[16];
-                using (var rng = RandomNumberGenerator.Create())
-                {
-                    rng.GetBytes(key);
-                }
-                var jwtKey = new SymmetricSecurityKey(key);
-                var creds = new SigningCredentials(jwtKey, SecurityAlgorithms.HmacSha256);
-
-
-                var token = new JwtSecurityToken(
-                    issuer: "myapp",
-                    audience: "myapp",
-                    claims: claims,
-                    expires: DateTime.UtcNow.AddMinutes(30),
-                    signingCredentials: creds);
+                var token = _jwtManager.GenerateToken(user.Id);
 
                 return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
             }

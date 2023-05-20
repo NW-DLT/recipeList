@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using recipeList;
 using recipeList.Data;
 using recipeList.Models;
 using System.Security.Cryptography;
@@ -16,6 +18,7 @@ string connection = builder.Configuration.GetConnectionString("DefaultConnection
 builder.Services.AddDbContext<AppDBContext>(options => options.UseSqlServer(connection));
 
 //Identity services
+builder.Services.AddScoped<JwtManager>();
 builder.Services.AddIdentity<User, IdentityRole>(options => 
     options.Password = new PasswordOptions
     {
@@ -28,36 +31,30 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
                 .AddDefaultTokenProviders();
 
 //AuthToken
-var key = new byte[16];
-using (var rng = RandomNumberGenerator.Create())
-{
-    rng.GetBytes(key);
-}
-var jwtKey = new SymmetricSecurityKey(key);
-
+builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
+            ValidIssuer = AuthOptions.ISSUER,
             ValidateAudience = true,
+            ValidAudience = AuthOptions.AUDIENCE,
             ValidateLifetime = true,
+            IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
             ValidateIssuerSigningKey = true,
-            ValidIssuer = "myapp",
-            ValidAudience = "myapp",
-            IssuerSigningKey = jwtKey
         };
     });
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
