@@ -8,6 +8,8 @@ using recipeList.Models;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace recipeList.Controllers
 {
@@ -25,12 +27,46 @@ namespace recipeList.Controllers
             this.httpContextAccessor = httpContextAccessor;
         }
         [HttpGet]
-        public async Task<ActionResult<List<Recipe>>> getRecipes()
+        public async Task<ActionResult<string>> getRecipes()
         {
             try
             {
-                var res = await _dbContext.recipes.Include(g => g.products).ToListAsync();
-                return res;
+                var options = new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.Preserve
+                };
+
+                var res = await _dbContext.recipes.Include(g => g.user)
+                                                  .Include(g => g.products)
+                                                  .ToListAsync();
+
+                var jsonString = JsonSerializer.Serialize(res, options);
+
+                return jsonString;
+            }
+            catch
+            {
+                return new NoContentResult();
+            }
+        }
+        [HttpGet("getUserRecipes/{userId}")]
+        public async Task<ActionResult<string>> getRecipes(string userId)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.Preserve
+                };
+
+                var res = await _dbContext.recipes.Include(g => g.user)
+                                                  .Include(g => g.products)
+                                                  .Where(g => g.user.Id == userId)
+                                                  .ToListAsync();
+
+                var jsonString = JsonSerializer.Serialize(res, options);
+
+                return jsonString;
             }
             catch
             {
@@ -38,11 +74,26 @@ namespace recipeList.Controllers
             }
         }
         [HttpGet("getRecipe/{id}")]
-        public async Task<ActionResult<Recipe>> getRecipe(int id)
+        public async Task<ActionResult<string>> getRecipe(int id)
         {
             try
             {
-                return await _dbContext.recipes.FindAsync(id);
+                var options = new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.Preserve
+                };
+
+                var recipe = await _dbContext.recipes.Include(g => g.user)
+                                                    .FirstOrDefaultAsync(o => o.id == id);
+
+                if (recipe == null)
+                {
+                    return new NotFoundResult();
+                }
+
+                var jsonString = JsonSerializer.Serialize(recipe, options);
+
+                return jsonString;
             }
             catch
             {
