@@ -12,6 +12,7 @@ namespace recipeList.Data
         public DbSet<Like> likes { get; set; }
         public DbSet<Subscribe> subscribers { get; set; }
         public DbSet<Image> Image { get; set; }
+        public DbSet<comment> comments { get; set; }
         public AppDBContext(DbContextOptions<AppDBContext> dbContextOptions)
             :base(dbContextOptions)
         {

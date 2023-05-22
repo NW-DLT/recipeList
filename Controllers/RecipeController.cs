@@ -38,6 +38,8 @@ namespace recipeList.Controllers
 
                 var res = await _dbContext.recipes.Include(g => g.user)
                                                   .Include(g => g.products)
+                                                  .Include(g => g.likes)
+                                                  .Include(g => g.comments)
                                                   .OrderByDescending(g => g.id)
                                                   .ToListAsync();
 
@@ -62,6 +64,8 @@ namespace recipeList.Controllers
 
                 var res = await _dbContext.recipes.Include(g => g.user)
                                                   .Include(g => g.products)
+                                                  .Include(g => g.likes)
+                                                  .Include(g => g.comments)
                                                   .Where(g => g.user.Id == userId)
                                                   .ToListAsync();
 
@@ -85,6 +89,8 @@ namespace recipeList.Controllers
                 };
 
                 var recipe = await _dbContext.recipes.Include(g => g.user)
+                                                     .Include(g => g.likes)
+                                                     .Include(g => g.comments)
                                                     .FirstOrDefaultAsync(o => o.id == id);
 
                 if (recipe == null)
@@ -168,6 +174,71 @@ namespace recipeList.Controllers
                 like.User = await _userManager.FindByIdAsync(userId);
                 recipe.likes = await _dbContext.likes.Where(g => g.Id == recipe.id).ToListAsync();
                 recipe.likes.Add(like);
+                await _dbContext.SaveChangesAsync();
+                return new OkResult();
+            }
+            catch
+            {
+                return new BadRequestResult();
+            }
+        }
+
+        [HttpPost("CommentRecipe/{id}")]
+        [Authorize]
+        public async Task<IActionResult> CommentRecipe(int id, string message)
+        {
+            try
+            {
+                var recipe = await _dbContext.recipes.FindAsync(id);
+                var userId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                comment comment = new comment()
+                {
+                    message = message,
+                    user = await _userManager.FindByIdAsync(userId)
+                };
+
+                recipe.comments = await _dbContext.comments.Where(g => g.recipe.id == recipe.id).ToListAsync();
+                recipe.comments.Add(comment);
+                await _dbContext.SaveChangesAsync();
+                return new OkResult();
+            }
+            catch
+            {
+                return new BadRequestResult();
+            }
+        }
+        [HttpDelete("DeleteLike/{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteLike(int id)
+        {
+            try
+            {
+                Like like = await _dbContext.likes.Include(i => i.User).FirstOrDefaultAsync(g => g.Id == id);
+                if(like.User.Id != httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier))
+                {
+                    return new BadRequestResult();
+                }
+                _dbContext.likes.Remove(like);
+                await _dbContext.SaveChangesAsync();
+                return new OkResult();
+            }
+            catch
+            {
+                return new BadRequestResult();
+            }
+        }
+        [HttpDelete("DeleteComment/{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteComment(int id)
+        {
+            try
+            {
+                comment comment = await _dbContext.comments.Include(i => i.user).FirstOrDefaultAsync(g => g.id == id);
+                if (comment.user.Id != httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier))
+                {
+                    return new BadRequestResult();
+                }
+                _dbContext.comments.Remove(comment);
                 await _dbContext.SaveChangesAsync();
                 return new OkResult();
             }

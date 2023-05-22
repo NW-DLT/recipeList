@@ -12,5 +12,6 @@ namespace recipeList.Models
         public User user { get; set; }
         public List<Product> products { get; set; }
         public List<Like> likes { get; set; }
+        public List<comment> comments { get; set; }
     }
 }
