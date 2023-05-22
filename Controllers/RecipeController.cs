@@ -38,6 +38,7 @@ namespace recipeList.Controllers
 
                 var res = await _dbContext.recipes.Include(g => g.user)
                                                   .Include(g => g.products)
+                                                  .OrderByDescending(g => g.id)
                                                   .ToListAsync();
 
                 var jsonString = JsonSerializer.Serialize(res, options);

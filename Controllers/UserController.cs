@@ -11,6 +11,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace recipeList.Controllers
 {
@@ -61,28 +63,59 @@ namespace recipeList.Controllers
                                                         .Include(g => g.Recipes)
                                                         .FirstOrDefaultAsync(o => o.Id == currentUserId);
 
-                return currentUser;
+                if (currentUser == null)
+                {
+                    return NotFound();
+                }
+
+                var options = new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.Preserve,
+                    MaxDepth = 64 // Установите максимальную глубину по вашему усмотрению
+                };
+
+                var json = JsonSerializer.Serialize(currentUser, options);
+
+                return Content(json, "application/json");
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                // Обработка исключения или логирование ошибки
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
         [HttpGet("profile/{id}")]
         [Authorize]
-        public async Task<ActionResult<User>> profile(string id)
+        public async Task<ActionResult<User>> Profile(string id)
         {
             try
             {
                 var currentUserId = httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var currentUser = await _dbContext.Users.Include(g => g.Image)
-                                                        .Include(g => g.Recipes)
-                                                        .FirstOrDefaultAsync(o => o.Id == id);
-                return currentUser;
+
+                var currentUser = await _dbContext.Users
+                    .Include(u => u.Image)
+                    .Include(u => u.Recipes)
+                    .FirstOrDefaultAsync(u => u.Id == id);
+
+                if (currentUser == null)
+                {
+                    return NotFound();
+                }
+
+                var options = new JsonSerializerOptions
+                {
+                    ReferenceHandler = ReferenceHandler.Preserve,
+                    MaxDepth = 64 // Установите максимальную глубину по вашему усмотрению
+                };
+
+                var json = JsonSerializer.Serialize(currentUser, options);
+
+                return Content(json, "application/json");
             }
-            catch
+            catch (Exception ex)
             {
-                return NotFound();
+                // Обработка исключения или логирование ошибки
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
         [HttpPost("avatar")]
